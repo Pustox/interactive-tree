@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Интерактивная Ёлка</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #2c3e50;
+      margin: 0;
+      overflow: hidden;
+    }
+    .tree {
+      width: 200px;
+      height: 300px;
+      position: relative;
+    }
+    .tree div {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 50px solid transparent;
+      border-right: 50px solid transparent;
+      border-bottom: 80px solid green;
+      opacity: 0.2;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .tree .level-1 {
+      top: 0;
+      left: 50px;
+    }
+    .tree .level-2 {
+      top: 60px;
+      left: 25px;
+    }
+    .tree .level-3 {
+      top: 140px;
+      left: 0;
+    }
+    .star {
+      position: absolute;
+      top: -30px;
+      left: 85px;
+      width: 30px;
+      height: 30px;
+      background: gold;
+      clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+      opacity: 0.2;
+      transition: opacity 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="tree">
+    <div class="star"></div>
+    <div class="level-1"></div>
+    <div class="level-2"></div>
+    <div class="level-3"></div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
