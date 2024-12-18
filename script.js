@@ -1,67 +1,70 @@
-c// Инициализация Web Audio API для работы с микрофоном
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-const analyser = audioContext.createAnalyser();
-analyser.fftSize = 256;
+const treeLevels = document.querySelectorAll('.tree div');
+const star = document.querySelector('.star');
 
-navigator.mediaDevices.getUserMedia({ audio: true })
-    .then((stream) => {
-        const source = audioContext.createMediaStreamSource(stream);
-        source.connect(analyser);
+let isTreeLit = false; // Флаг: ёлка полностью зажжена
 
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+// Функция для работы с микрофоном
+navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+  const microphone = audioContext.createMediaStreamSource(stream);
+  const analyser = audioContext.createAnalyser();
+  analyser.fftSize = 256;
 
-        function animate() {
-            analyser.getByteFrequencyData(dataArray);
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+  microphone.connect(analyser);
 
-            // Проверяем уровень громкости
-            const volume = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+  function animateTree() {
+    if (!isTreeLit) { // Ёлка мигает, только если не сказано "гори"
+      analyser.getByteFrequencyData(dataArray);
+      const volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
 
-            // Уровни ёлки
-            if (!isTreeLit) { // Только если "Гори" ещё не сказано
-                if (volume > 20) treeLevels[0].style.opacity = '1';
-                if (volume > 50) treeLevels[1].style.opacity = '1';
-                if (volume > 100) treeLevels[2].style.opacity = '1';
-                if (volume > 150) star.style.opacity = '1';
-            }
+      // Управление прозрачностью ветвей ёлки
+      if (volume > 5) treeLevels[0].style.opacity = '1';
+      if (volume > 10) treeLevels[1].style.opacity = '1';
+      if (volume > 20) treeLevels[2].style.opacity = '1';
+      if (volume > 30) star.style.opacity = '1';
 
-            requestAnimationFrame(animate);
-        }
-        animate();
-    })
-    .catch((err) => console.error('Ошибка доступа к микрофону:', err));
+      // Если тише, то гасим
+      if (volume < 30) star.style.opacity = '0.2';
+      if (volume < 20) treeLevels[2].style.opacity = '0.2';
+      if (volume < 10) treeLevels[1].style.opacity = '0.2';
+      if (volume < 5) treeLevels[0].style.opacity = '0.2';
+    }
 
-// Распознавание речи
+    requestAnimationFrame(animateTree);
+  }
+
+  animateTree();
+});
+
+// Добавляем распознавание речи
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 if (SpeechRecognition) {
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'ru-RU'; // Устанавливаем русский язык
-    recognition.continuous = true;
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'ru-RU'; // Устанавливаем русский язык
+  recognition.continuous = true; // Чтобы распознавание не останавливалось
 
-    let isTreeLit = false;
+  recognition.onresult = (event) => {
+    const transcript = event.results[event.results.length - 1][0].transcript.trim();
+    console.log('Распознан текст:', transcript);
 
-    recognition.onresult = (event) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.trim();
+    if (transcript.toLowerCase() === 'гори') {
+      console.log('Слово "гори" распознано!');
+      isTreeLit = true; // Устанавливаем флаг: ёлка полностью зажжена
 
-        console.log('Распознан текст:', transcript);
+      // Полностью зажигаем ёлку
+      treeLevels.forEach((level) => level.style.opacity = '1');
+      star.style.opacity = '1';
 
-        if (transcript.toLowerCase() === 'гори') {
-            console.log('Слово "гори" распознано!');
-            isTreeLit = true;
+      // Можно остановить распознавание речи, если больше не нужно
+      recognition.stop();
+    }
+  };
 
-            // Зажигаем всю ёлку
-            treeLevels.forEach((level) => level.style.opacity = '1');
-            star.style.opacity = '1';
+  recognition.onerror = (err) => console.error('Ошибка распознавания речи:', err);
 
-            // Останавливаем распознавание
-            recognition.stop();
-        }
-    };
-
-    recognition.onerror = (err) => console.error('Ошибка распознавания речи:', err);
-
-    recognition.start();
+  recognition.start(); // Запускаем распознавание
 } else {
-    console.error('Ваш браузер не поддерживает Speech Recognition API.');
+  console.error('Ваш браузер не поддерживает Speech Recognition API.');
 }
-
